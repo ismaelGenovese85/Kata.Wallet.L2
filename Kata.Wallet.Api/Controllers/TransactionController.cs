@@ -3,12 +3,15 @@ using Kata.Wallet.Domain;
 using Kata.Wallet.Domain.IServices;
 using Kata.Wallet.Dtos;
 using Kata.Wallet.Services.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Kata.Wallet.Api.Controllers
 {
     [ApiController]
     [Route("api/transaction")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class TransactionController: ControllerBase
     {
         private readonly ITransactionService transactionService;
@@ -20,8 +23,31 @@ namespace Kata.Wallet.Api.Controllers
             this.mapper = mapper;
         }
 
+        [HttpGet("{id:int}", Name = "GetTransactionById")]
+        [AllowAnonymous]
+        public async Task<ActionResult<TransactionDto>> Get(int id)
+        {
+            try
+            {
+                var transaction = await transactionService.GetById(id);
+                if (transaction is null)
+                {
+                    return NotFound();
+                }
+
+                var dto = mapper.Map<TransactionDto>(transaction);
+                return dto;
+
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
         [HttpGet("{walletId}")]
-        public async Task<ActionResult<List<TransactionDto>>> GetByWalletId(int walletId)
+        [AllowAnonymous]
+        public async Task<ActionResult<TransactionGroupedByWalletDto>> GetByWalletId(int walletId)
         {
             try
             {
@@ -42,14 +68,8 @@ namespace Kata.Wallet.Api.Controllers
 
         }
 
-        [HttpGet("wallet/{walletId}")]
-        public async Task<ActionResult<WalletTransactionListDto>> GetGrouped(int walletId)
-        {
-            var result = await transactionService.GetGroupedByWalletId(walletId);
-            return Ok(result);
-        }
-
-        [HttpPost]
+        [HttpPost("create")]
+        [AllowAnonymous]
         public async Task<ActionResult> Create([FromBody] TransactionCreationDto transactionCreationDto)
         {
             try

@@ -8,6 +8,7 @@ namespace Kata.Wallet.Domain.IRepositories
 {
     public interface ITransactionRepository
     {
+        Task<Transaction?> GetById(int id);
         Task Create(Transaction transaction);
         Task<List<Transaction>> GetAllByWalletId(int walletId);
     }

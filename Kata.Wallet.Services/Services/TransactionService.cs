@@ -21,6 +21,11 @@ namespace Kata.Wallet.Services.Services
             this.transactionRepository = transactionRepository;
             this.walletService = walletService;
         }
+
+        public async Task<Domain.Transaction?> GetById(int id)
+        {
+            return await transactionRepository.GetById(id);
+        }
         public async Task Create(TransactionRequest transactionRequest)
         {
             var origin = await walletService.GetById(transactionRequest.OriginWalletId)

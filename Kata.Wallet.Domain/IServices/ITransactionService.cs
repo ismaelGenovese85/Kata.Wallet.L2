@@ -8,6 +8,7 @@ namespace Kata.Wallet.Domain.IServices
 {
     public interface ITransactionService
     {
+        Task<Domain.Transaction?> GetById(int id);
         Task Create(TransactionRequest transactionRequest);
         Task<(List<Transaction> Sent, List<Transaction> Received)> GetGroupedByWalletId(int walletId);
     }

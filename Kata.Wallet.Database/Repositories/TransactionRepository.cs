@@ -17,6 +17,12 @@ namespace Kata.Wallet.Database.Repositories
         {
             this.dataContext = dataContext;
         }
+
+        public async Task<Domain.Transaction?> GetById(int id)
+        {
+            return await dataContext.Transactions.FindAsync(id);
+        }
+
         public async Task Create(Transaction transaction)
         {
             dataContext.Add(transaction);

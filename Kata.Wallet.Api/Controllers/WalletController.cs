@@ -2,12 +2,15 @@
 using Kata.Wallet.Domain;
 using Kata.Wallet.Domain.IServices;
 using Kata.Wallet.Dtos;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Kata.Wallet.API.Controllers;
 
 [ApiController]
 [Route("api/wallet")]
+[Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 public class WalletController : ControllerBase
 {
     private readonly IWalletService walletService;
@@ -19,13 +22,8 @@ public class WalletController : ControllerBase
         this.mapper = mapper;
     }
 
-    [HttpGet]
-    public async Task<ActionResult<List<Domain.Wallet>>> GetAll()
-    {
-        throw new NotImplementedException();
-    }
-
     [HttpGet("{id:int}", Name = "GetWalletById")]
+    [AllowAnonymous]
     public async Task<ActionResult<WalletDto>> Get(int id)
     {
         try
@@ -46,7 +44,8 @@ public class WalletController : ControllerBase
         }
     }
 
-    [HttpGet("filtrar")]
+    [HttpGet("filter")]
+    [AllowAnonymous]
     public async Task<ActionResult<List<WalletDto>>> Filter([FromQuery] WalletFilterDto walletFilterDto)
     {
         try
@@ -61,7 +60,8 @@ public class WalletController : ControllerBase
         }
     }
 
-    [HttpPost]
+    [HttpPost("create")]
+    [AllowAnonymous]
     public async Task<ActionResult> Create([FromBody] WalletCreationDto walletDto)
     {
         try

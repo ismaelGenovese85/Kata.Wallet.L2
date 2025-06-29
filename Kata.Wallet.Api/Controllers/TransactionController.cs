@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Kata.Wallet.API.Controllers;
 using Kata.Wallet.Domain;
 using Kata.Wallet.Domain.IServices;
 using Kata.Wallet.Dtos;
@@ -6,6 +7,7 @@ using Kata.Wallet.Services.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace Kata.Wallet.Api.Controllers
 {
@@ -16,11 +18,14 @@ namespace Kata.Wallet.Api.Controllers
     {
         private readonly ITransactionService transactionService;
         private readonly IMapper mapper;
+        private readonly ILogger<TransactionController> logger;
 
-        public TransactionController(ITransactionService transactionService, IMapper mapper)
+        public TransactionController(ITransactionService transactionService, IMapper mapper,
+            ILogger<TransactionController> logger)
         {
             this.transactionService = transactionService;
             this.mapper = mapper;
+            this.logger = logger;
         }
 
         [HttpGet("{id:int}", Name = "GetTransactionById")]
@@ -29,9 +34,11 @@ namespace Kata.Wallet.Api.Controllers
         {
             try
             {
+                logger.LogInformation("GetTransactionById => ID: {Id}", id);
                 var transaction = await transactionService.GetById(id);
                 if (transaction is null)
                 {
+                    logger.LogInformation("Transaction NotFound ID: {Id}", id);
                     return NotFound();
                 }
 
@@ -41,7 +48,8 @@ namespace Kata.Wallet.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                logger.LogError(ex, "Error in GetTransactionById => ID: {Id}", id);
+                return StatusCode(500, ex.Message);
             }
         }
 
@@ -51,6 +59,7 @@ namespace Kata.Wallet.Api.Controllers
         {
             try
             {
+                logger.LogInformation("Init GetByWalletId => WalletId: {walletId}", walletId);
                 var (sent, received) = await transactionService.GetGroupedByWalletId(walletId);
 
                 var result = new TransactionGroupedByWalletDto
@@ -63,7 +72,8 @@ namespace Kata.Wallet.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                logger.LogError(ex, "Error in GetByWalletId => WalletId: {walletId}", walletId);
+                return StatusCode(500, ex.Message);
             }
 
         }
@@ -74,6 +84,7 @@ namespace Kata.Wallet.Api.Controllers
         {
             try
             {
+                logger.LogInformation("Create Transaction: {Transaction}", transactionCreationDto);
                 var transactionRequest = mapper.Map<TransactionRequest>(transactionCreationDto);
                 await transactionService.Create(transactionRequest);
                 return Ok(transactionRequest);
@@ -81,7 +92,8 @@ namespace Kata.Wallet.Api.Controllers
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                logger.LogError(ex, "Error in Create Transaction: {Transaction}", transactionCreationDto);
+                return StatusCode(500, ex.Message);
             }
         }
 

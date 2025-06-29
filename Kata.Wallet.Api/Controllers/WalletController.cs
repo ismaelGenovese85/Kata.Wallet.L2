@@ -15,11 +15,14 @@ public class WalletController : ControllerBase
 {
     private readonly IWalletService walletService;
     private readonly IMapper mapper;
+    private readonly ILogger<WalletController> logger;
 
-    public WalletController(IWalletService walletService, IMapper mapper) 
+    public WalletController(IWalletService walletService, IMapper mapper,
+        ILogger<WalletController> logger) 
     {
         this.walletService = walletService;
         this.mapper = mapper;
+        this.logger = logger;
     }
 
     [HttpGet("{id:int}", Name = "GetWalletById")]
@@ -28,9 +31,11 @@ public class WalletController : ControllerBase
     {
         try
         {
+            logger.LogInformation("GetWalletById => ID: {Id}", id);
             var wallet = await walletService.GetById(id);
             if (wallet is null)
             {
+                logger.LogInformation("Wallet NotFound ID: {Id}", id);
                 return NotFound();
             }
 
@@ -40,7 +45,8 @@ public class WalletController : ControllerBase
         }
         catch (Exception ex)
         {
-            return BadRequest(ex.Message);
+            logger.LogError(ex, "Error in GetWalletById => id {WalletId}", id);
+            return StatusCode(500, ex.Message);
         }
     }
 
@@ -50,13 +56,15 @@ public class WalletController : ControllerBase
     {
         try
         {
+            logger.LogInformation("Filter wallets => paramas: {@Filter}", walletFilterDto);
             var filter = mapper.Map<WalletFilter>(walletFilterDto);
             var list = mapper.Map<List<WalletDto>>(await walletService.Filter(filter)); 
             return Ok(list);
         }
         catch (Exception ex)
         {
-            return BadRequest(ex.Message);
+            logger.LogError(ex, "Error in filter");
+            return StatusCode(500, ex.Message);
         }
     }
 
@@ -66,6 +74,7 @@ public class WalletController : ControllerBase
     {
         try
         {
+            logger.LogInformation("Create wallet: {wallet}", walletDto);
             var wallet = mapper.Map<Domain.Wallet>(walletDto);
             await walletService.Create(wallet);
             return CreatedAtRoute("GetWalletById", new { id = wallet.Id }, wallet);
@@ -73,7 +82,8 @@ public class WalletController : ControllerBase
         }
         catch (Exception ex)
         {
-            return BadRequest(ex.Message);
+            logger.LogError(ex, "Error in create wallet");
+            return StatusCode(500, ex.Message);
         }
     }
 }

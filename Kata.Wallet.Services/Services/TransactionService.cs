@@ -1,6 +1,7 @@
 ﻿using Kata.Wallet.Domain;
 using Kata.Wallet.Domain.IRepositories;
 using Kata.Wallet.Domain.IServices;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,22 +13,28 @@ namespace Kata.Wallet.Services.Services
     public class TransactionService: ITransactionService
     {
         private readonly ITransactionRepository transactionRepository;
+        private readonly ILogger<TransactionService> logger;
         private readonly IWalletService walletService;
 
         public TransactionService(
-            ITransactionRepository transactionRepository, 
+            ITransactionRepository transactionRepository,
+            ILogger<TransactionService> logger,
             IWalletService walletService)
         {
             this.transactionRepository = transactionRepository;
+            this.logger = logger;
             this.walletService = walletService;
         }
 
         public async Task<Domain.Transaction?> GetById(int id)
         {
+            logger.LogInformation("Service: GetById Transaction {Id}", id);
             return await transactionRepository.GetById(id);
         }
         public async Task Create(TransactionRequest transactionRequest)
         {
+            logger.LogInformation("Service: Create Transaction {Transaction}", transactionRequest);
+
             var origin = await walletService.GetById(transactionRequest.OriginWalletId)
                 ?? throw new Exception("Origin wallet not found.");
 
@@ -58,11 +65,10 @@ namespace Kata.Wallet.Services.Services
 
         public async Task<(List<Transaction> Sent, List<Transaction> Received)> GetGroupedByWalletId(int walletId)
         {
+            logger.LogInformation("Service: GetGroupedByWalletId WalletId: {walletId}", walletId);
             var transactions = await transactionRepository.GetAllByWalletId(walletId);
-
             var sent = transactions.Where(t => t.WalletOutgoing.Id == walletId).ToList();
             var received = transactions.Where(t => t.WalletIncoming.Id == walletId).ToList();
-
             return (sent, received);
         }
     }

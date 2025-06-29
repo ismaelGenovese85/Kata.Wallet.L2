@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 namespace Kata.Wallet.Tests.ServicesTests
 {
     [TestClass]
-    public sealed class TransactionsTests
+    public sealed class TransactionServiceTests
     {
         private Mock<ITransactionRepository> transactionRepoMock = null!;
         private Mock<ILogger<TransactionService>> loggerTransactionMock = null!;
